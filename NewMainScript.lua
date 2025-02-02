@@ -9537,164 +9537,154 @@ run(function() -- thank you SystemXVoid for letting me use this
 		end
 	})
 end)
-
-
 run(function()
-	local AntiHit = {Enabled = false}
-	local hrptransparency = {Enabled = false}
-	local transparencyvalue = {Value = 40}
-	local skydelay = {Value = 18}
-	local grounddelay = {Value = 18}
-	local antihitpredict = {Enabled = false}
-	local respawntick = tick()
-	
-	local old
-	local createclone = function()
-		if cloned then return end
-		if not entitylib.isAlive then
-			return
-		end
-		cloned = true
-		--warningNotification('Cat', 'added clone', 5)
-		lplr.Character.Parent = replicatedStorage
-		lplr.Character.HumanoidRootPart.Archivable = true
-		old = lplr.Character.HumanoidRootPart 
-		old.Anchored = false
-		clone = old:Clone()
-		clone.Parent = lplr.Character
-		old.Parent = workspace
-		lplr.Character.PrimaryPart = clone
-		entitylib.character.HumanoidRootPart = clone
-		lplr.Character.Parent = workspace
-		old.Transparency = hrptransparency.Enabled and transparencyvalue.Value / 100 or 1
-	end
-	local destroyclone = function()
-		if not cloned then return end
-		--warningNotification('Cat', 'removed clone', 5)
-		cloned = false
-		old.CFrame = clone.CFrame
-		old.Transparency = 1
-		lplr.Character.Parent = replicatedStorage
-		old.Parent = lplr.Character
-		clone.Parent = workspace
-		lplr.Character.PrimaryPart = old
-		lplr.Character.Parent = workspace
-		entitylib.character.HumanoidRootPart = old
-	end
-	local antihitting = false
-	local flagged = false
+    local AntiHit = {Enabled = false}
+    local hrptransparency = {Enabled = false}
+    local transparencyvalue = {Value = 40}
+    local skydelay = {Value = 18}
+    local grounddelay = {Value = 18}
+    local antihitpredict = {Enabled = false}
+    local respawntick = tick()
+    
+    local old
+    local createclone = function()
+        if cloned then return end
+        if not entitylib.isAlive then
+            return
+        end
+        cloned = true
+        lplr.Character.Parent = replicatedStorage
+        lplr.Character.HumanoidRootPart.Archivable = true
+        old = lplr.Character.HumanoidRootPart 
+        old.Anchored = false
+        clone = old:Clone()
+        clone.Parent = lplr.Character
+        old.Parent = workspace
+        lplr.Character.PrimaryPart = clone
+        entitylib.character.HumanoidRootPart = clone
+        lplr.Character.Parent = workspace
+        old.Transparency = hrptransparency.Enabled and transparencyvalue.Value / 100 or 1
+    end
+    local destroyclone = function()
+        if not cloned then return end
+        cloned = false
+        old.CFrame = clone.CFrame
+        old.Transparency = 1
+        lplr.Character.Parent = replicatedStorage
+        old.Parent = lplr.Character
+        clone.Parent = workspace
+        lplr.Character.PrimaryPart = old
+        lplr.Character.Parent = workspace
+        entitylib.character.HumanoidRootPart = old
+    end
+    local antihitting = false
+    local flagged = false
 
-	local lastSkyTick = tick();
-	local lastGroundTick = tick();
+    local lastSkyTick = tick()
+    local lastGroundTick = tick()
 
-	AntiHit = vape.Categories.Blatant:CreateModule({
-		Name = 'AntiHit',
-		Tooltip = 'Prevents people from being able to hit you',
-		Function = function(callback: boolean)
-			if callback then
-				if store.matchState == 0 then
-					repeat task.wait() until store.matchState ~= 0 or not AntiHit.Enabled
-					if AntiHit.Enabled then return end
-					task.wait(0.25)
-				end
-				table.insert(AntiHit.Connections, runService.Heartbeat:Connect(function()
-					if not landed then return end
-					if oldroot then return end
-					if entitylib.isAlive and cloned then
-						if hrptransparency.Enabled then
-							clone.Transparency = 1
-							old.Transparency = transparencyvalue.Value / 100
-						else
-							clone.Transparency = 1
-							old.Transparency = 1
-						end
-						if clone.Parent == lplr.Character and not antihitting then
-							old.Velocity = Vector3.zero
-							old.CFrame = clone.CFrame
-						end
-					elseif entitylib.isAlive and not cloned then
-						if hrptransparency.Enabled then
-							lplr.Character.HumanoidRootPart.Transparency = transparencyvalue.Value / 100
-						else
-							lplr.Character.HumanoidRootPart.Transparency = 1
-						end
-					end
-				end))
-				repeat
-					task.wait()
-					if Attacking and landed and not vape.Modules.InfiniteFly.Enabled then
-						if (tick() - lastSkyTick) > (skydelay.Value / 100) then
-							createclone();
-							antihitting = true;
-							old.CFrame = (clone.CFrame + Vector3.new(0, 200, 0))
-							repeat task.wait() until (tick() - lastSkyTick) > (grounddelay.Value / 100) or not landed;
-							if not landed then 
-								antihitting = false 
-								destroyclone();
-								continue 
-							end;
-							old.CFrame = CFrame.new(old.CFrame.X, clone.CFrame.Y, old.CFrame.Z);
-							task.delay(0.08, function()
-								old.CFrame = clone.CFrame
-							end)
-							antihitting = false;
-							lastSkyTick = tick() + 0.1;
-							lastGroundTick = tick();
-						end;		
-					else
-						if cloned then destroyclone() end
-						antihitting = false
-					end
-				until (not AntiHit.Enabled)
-			else
-				if cloned then 
-					destroyclone() 
-				end
-				lplr.Character.HumanoidRootPart.Transparency = 1
-			end
-		end,
-		ExtraText = function()
-			return 'Decent'
-		end
-	})
-	hrptransparency = AntiHit:CreateToggle({
-		Name = 'Custom Root Transparency',
-		Function = function(callback: boolean)
-			pcall(function() transparencyvalue.Object.Visible = callback end)
-		end
-	})
-	transparencyvalue = AntiHit:CreateSlider({
-		Name = 'Root Transparency',
-		Min = 0,
-		Max = 100,
-		Function = void
-	})
-	transparencyvalue.Object.Visible = false
-	skydelay = AntiHit:CreateSlider({
-		Name = 'Sky TP Delay',
-		Min = 5,
-		Max = 40,
-		Default = 18,
-		Function = void
-	})
-	grounddelay = AntiHit:CreateSlider({
-		Name = 'Ground TP Delay',
-		Min = 5,
-		Max = 40,
-		Default = 18,
-		Function = void
-	})
+    AntiHit = vape.Categories.Blatant:CreateModule({
+        Name = 'AntiHit',
+        Tooltip = 'Prevents people from being able to hit you',
+        Function = function(callback)
+            if callback then
+                if store.matchState == 0 then
+                    repeat task.wait() until store.matchState ~= 0 or not AntiHit.Enabled
+                    if AntiHit.Enabled then return end
+                    task.wait(0.25)
+                end
+                table.insert(AntiHit.Connections, runService.Heartbeat:Connect(function()
+                    if not landed then return end
+                    if oldroot then return end
+                    if entitylib.isAlive and cloned then
+                        if hrptransparency.Enabled then
+                            clone.Transparency = 1
+                            old.Transparency = transparencyvalue.Value / 100
+                        else
+                            clone.Transparency = 1
+                            old.Transparency = 1
+                        end
+                        if clone.Parent == lplr.Character and not antihitting then
+                            old.Velocity = Vector3.zero
+                            old.CFrame = clone.CFrame
+                        end
+                    elseif entitylib.isAlive and not cloned then
+                        if hrptransparency.Enabled then
+                            lplr.Character.HumanoidRootPart.Transparency = transparencyvalue.Value / 100
+                        else
+                            lplr.Character.HumanoidRootPart.Transparency = 1
+                        end
+                    end
+                end))
+                repeat
+                    task.wait()
+                    if Attacking and landed and not vape.Modules.InfiniteFly.Enabled then
+                        if (tick() - lastSkyTick) > (skydelay.Value / 100) then
+                            createclone()
+                            antihitting = true
+                            old.CFrame = (clone.CFrame + Vector3.new(0, 200, 0))
+                            repeat task.wait() until (tick() - lastSkyTick) > (grounddelay.Value / 100) or not landed
+                            if not landed then 
+                                antihitting = false 
+                                destroyclone()
+                                continue 
+                            end
+                            old.CFrame = CFrame.new(old.CFrame.X, clone.CFrame.Y, old.CFrame.Z)
+                            task.delay(0.08, function()
+                                old.CFrame = clone.CFrame
+                            end)
+                            antihitting = false
+                            lastSkyTick = tick() + 0.1
+                            lastGroundTick = tick()
+                        end
+                    else
+                        if cloned then destroyclone() end
+                        antihitting = false
+                    end
+                until (not AntiHit.Enabled)
+            else
+                if cloned then 
+                    destroyclone() 
+                end
+                lplr.Character.HumanoidRootPart.Transparency = 1
+            end
+        end,
+        ExtraText = function()
+            return 'Decent'
+        end
+    })
+    hrptransparency = AntiHit:CreateToggle({
+        Name = 'Custom Root Transparency',
+        Function = function(callback)
+            pcall(function() transparencyvalue.Object.Visible = callback end)
+        end
+    })
+    transparencyvalue = AntiHit:CreateSlider({
+        Name = 'Root Transparency',
+        Min = 0,
+        Max = 100,
+        Function = function() end
+    })
+    transparencyvalue.Object.Visible = false
+    skydelay = AntiHit:CreateSlider({
+        Name = 'Sky TP Delay',
+        Min = 5,
+        Max = 40,
+        Default = 18,
+        Function = function() end
+    })
+    grounddelay = AntiHit:CreateSlider({
+        Name = 'Ground TP Delay',
+        Min = 5,
+        Max = 40,
+        Default = 18,
+        Function = function() end
+    })
 end)
 
 run(function()
-    local autobankui;
-    local AutoBank
-    local explode = false
-    local wowie = {}
-    local alldropped = false
-    local sigmaitems3 = {}
-    local sigmaitems = {}
-    AutoBank = vape.Categories.Utility:CreateModule({
+    local autobankui
+    local AutoBank = vape.Categories.Utility:CreateModule({
         Name = 'AutoBank',
         Function = function(callback)
             if callback then
@@ -9710,11 +9700,11 @@ run(function()
                 task.spawn(function()
                     repeat
                         task.wait()
-                        if autobankui then 
+                        if autobankui then
                             local hotbar = lplr.PlayerGui:FindFirstChild('hotbar')
-                            if hotbar then 
+                            if hotbar then
                                 local healthbar = hotbar['1']:FindFirstChild('HotbarHealthbarContainer')
-                                if healthbar then 
+                                if healthbar then
                                     autobankui.Position = UDim2.new(0.5, 0, 0, healthbar.AbsolutePosition.Y - 30)
                                 end
                             end
@@ -9725,39 +9715,30 @@ run(function()
                 end)
                 autobankui.BackgroundTransparency = 1
                 autobankui.Parent = vape.gui
-                local emerald = Instance.new('ImageLabel')
-                emerald.Image = bedwars.getIcon({itemType = 'emerald'}, true)
-                emerald.Size = UDim2.new(0, 40, 0, 40)
-                emerald.Name = 'emerald'
-                emerald.Position = UDim2.new(0, 160, 0, 0)
-                emerald.BackgroundTransparency = 1
-                emerald.Parent = autobankui
-                local emeraldtext = Instance.new('TextLabel')
-                emeraldtext.TextSize = 20
-                emeraldtext.BackgroundTransparency = 1
-                emeraldtext.Size = UDim2.new(1, 0, 1, 0)
-                emeraldtext.Font = Enum.Font.SourceSans
-                emeraldtext.TextStrokeTransparency = 0.3
-                emeraldtext.Name = 'amount'
-                emeraldtext.Text = '0'
-                emeraldtext.TextColor3 = Color3.new(1, 1, 1)
-                emeraldtext.Parent = emerald
-                local diamond = emerald:Clone()
-                diamond.Image = bedwars.getIcon({itemType = 'diamond'}, true)
-                diamond.Position = UDim2.new(0, 120, 0, 0)
-                diamond.Name = 'diamond'
-                diamond.Parent = autobankui
-                local gold = emerald:Clone()
-                gold.Image = bedwars.getIcon({itemType = 'gold'}, true)
-                gold.Position = UDim2.new(0, 80, 0, 0)
-                gold.Name = 'gold'
-                gold.Parent = autobankui
-                local iron = emerald:Clone()
-                iron.Image = bedwars.getIcon({itemType = 'iron'}, true)
-                iron.Position = UDim2.new(0, 40, 0, 0)
-                iron.Name = 'iron'
-                iron.Parent = autobankui
-                local echest = replicatedStorage.Inventories:FindFirstChild(lplr.Name..'_personal')
+                local function createIcon(itemType, position)
+                    local icon = Instance.new('ImageLabel')
+                    icon.Image = bedwars.getIcon({itemType = itemType}, true)
+                    icon.Size = UDim2.new(0, 40, 0, 40)
+                    icon.Position = position
+                    icon.BackgroundTransparency = 1
+                    icon.Parent = autobankui
+                    local textLabel = Instance.new('TextLabel')
+                    textLabel.TextSize = 20
+                    textLabel.BackgroundTransparency = 1
+                    textLabel.Size = UDim2.new(1, 0, 1, 0)
+                    textLabel.Font = Enum.Font.SourceSans
+                    textLabel.TextStrokeTransparency = 0.3
+                    textLabel.Name = 'amount'
+                    textLabel.Text = '0'
+                    textLabel.TextColor3 = Color3.new(1, 1, 1)
+                    textLabel.Parent = icon
+                    return icon
+                end
+                createIcon('emerald', UDim2.new(0, 160, 0, 0))
+                createIcon('diamond', UDim2.new(0, 120, 0, 0))
+                createIcon('gold', UDim2.new(0, 80, 0, 0))
+                createIcon('iron', UDim2.new(0, 40, 0, 0))
+                local echest = replicatedStorage.Inventories:FindFirstChild(lplr.Name .. '_personal')
                 task.spawn(function()
                     AutoBank:Clean(workspace.ItemDrops.ChildAdded:Connect(function(v)
                         for _, x in sigmaitems2 do
@@ -9785,116 +9766,102 @@ run(function()
 end)
 
 run(function()
-	local AntiDeath
-	local HealthLimit
-	local Mode
-	local saved = false
-	AntiDeath = vape.Categories.Blatant:CreateModule({
-		Name = 'AntiDeath',
-		Tooltip = 'Prevents you from dying.',
-		Function = function(callback: boolean)
-			if callback then
-				saved = false
-				task.spawn(function()
-					repeat task.wait() until lplr.Character.Humanoid
-					AntiDeath:Clean(lplr.Character.Humanoid.HealthChanged:Connect(function(health)
-						if health <= HealthLimit.Value and not saved then
-							if Mode.Value == 'Infinite Fly' then
-								vape.Modules.InfiniteFly:Toggle()
-							elseif Mode.Value == 'Teleport' then
-								lplr.Character.HumanoidRootPart.CFrame *= CFrame.new(0, 400, 0)
-							end
-							notif('AntiDeath', 'You have low HP! ('..health..'hp)', 3, 'alert')
-							saved = true
-						end
-						if health > HealthLimit.Value then
-							saved = false
-						end
-					end))
-				end)
-			end
-		end,
-		ExtraText = function() return Mode.Value end
-	})
-	Mode = AntiDeath:CreateDropdown({
-		Name = 'Mode',
-		List = {'Infinite Fly', 'Teleport'},
-		Function = void
-	})
-	HealthLimit = AntiDeath:CreateSlider({
-		Name = 'Health',
-		Min = 1,
-		Max = 50,
-		Default = 30,
-		Suffix = function() 
-			return 'HP'
-		end
-	})
+    local AntiDeath = vape.Categories.Blatant:CreateModule({
+        Name = 'AntiDeath',
+        Tooltip = 'Prevents you from dying.',
+        Function = function(callback)
+            if callback then
+                local saved = false
+                task.spawn(function()
+                    repeat task.wait() until lplr.Character.Humanoid
+                    AntiDeath:Clean(lplr.Character.Humanoid.HealthChanged:Connect(function(health)
+                        if health <= HealthLimit.Value and not saved then
+                            if Mode.Value == 'Infinite Fly' then
+                                vape.Modules.InfiniteFly:Toggle()
+                            elseif Mode.Value == 'Teleport' then
+                                lplr.Character.HumanoidRootPart.CFrame *= CFrame.new(0, 400, 0)
+                            end
+                            notif('AntiDeath', 'You have low HP! (' .. health .. 'hp)', 3, 'alert')
+                            saved = true
+                        end
+                        if health > HealthLimit.Value then
+                            saved = false
+                        end
+                    end))
+                end)
+            end
+        end,
+        ExtraText = function() return Mode.Value end
+    })
+    local Mode = AntiDeath:CreateDropdown({
+        Name = 'Mode',
+        List = {'Infinite Fly', 'Teleport'},
+        Function = function() end
+    })
+    local HealthLimit = AntiDeath:CreateSlider({
+        Name = 'Health',
+        Min = 1,
+        Max = 50,
+        Default = 30,
+        Suffix = function() 
+            return 'HP'
+        end
+    })
 end)
 
 run(function()
-	local Desync
-	local Type
-	local AutoSend
-	local AutoSendLength
-	local NoFly
-	local oldphys, oldsend
-	
-	Desync = vape.Categories.Utility:CreateModule({
-		Name = 'Desync',
-		Function = function(callback)
-			if callback then
-				local teleported
-				Desync:Clean(lplr.OnTeleport:Connect(function()
-					setfflag('S2PhysicsSenderRate', '15')
-					setfflag('DataSenderRate', '60')
-					teleported = true
-				end))
-	
-				repeat
-					local physicsrate, senderrate = '0', Type.Value == 'All' and '-1' or '60'
-					if (vape.Modules.Fly.Enabled or vape.Modules.InfiniteFly.Enabled) and NoFly.Enabled then
-						setfflag('S2PhysicsSenderRate', '15')
-						setfflag('DataSenderRate', '60')
-						oldphys, oldsend = nil, nil
-					else
-						if tick() % (AutoSendLength.Value + 0.1) > AutoSendLength.Value then
-							physicsrate, senderrate = '15', '60'
-						end
-		
-						if physicsrate ~= oldphys or senderrate ~= oldsend then
-							setfflag('S2PhysicsSenderRate', physicsrate)
-							setfflag('DataSenderRate', senderrate)
-							oldphys, oldsend = physicsrate, oldsend
-						end
-					end
-					
-					task.wait(0.03)
-				until (not Desync.Enabled and not teleported)
-			else
-				setfflag('S2PhysicsSenderRate', '15')
-				setfflag('DataSenderRate', '60')
-				oldphys, oldsend = nil, nil
-			end
-		end,
-		Tooltip = 'Desyncs ur character.\n (does not affect your pov)'
-	})
-	Type = Desync:CreateDropdown({
-		Name = 'Type',
-		List = {'Movement Only', 'All'},
-		Tooltip = 'Movement Only - Only chokes movement packets\nAll - Chokes remotes & movement'
-	})
-	AutoSendLength = Desync:CreateSlider({
-		Name = 'Send delay',
-		Min = 0,
-		Max = 1,
-		Decimal = 100,
-		Suffix = function(val)
-			return val == 1 and 'second' or 'seconds'
-		end
-	})
-	NoFly = Desync:CreateToggle({
-		Name = 'Disable when flying',
-		Default = true
-	})
-end)	
+    local Desync = vape.Categories.Utility:CreateModule({
+        Name = 'Desync',
+        Function = function(callback)
+            if callback then
+                local teleported
+                Desync:Clean(lplr.OnTeleport:Connect(function()
+                    setfflag('S2PhysicsSenderRate', '15')
+                    setfflag('DataSenderRate', '60')
+                    teleported = true
+                end))
+                repeat
+                    local physicsrate, senderrate = '0', Type.Value == 'All' and '-1' or '60'
+                    if (vape.Modules.Fly.Enabled or vape.Modules.InfiniteFly.Enabled) and NoFly.Enabled then
+                        setfflag('S2PhysicsSenderRate', '15')
+                        setfflag('DataSenderRate', '60')
+                        oldphys, oldsend = nil, nil
+                    else
+                        if tick() % (AutoSendLength.Value + 0.1) > AutoSendLength.Value then
+                            physicsrate, senderrate = '15', '60'
+                        end
+                        if physicsrate ~= oldphys or senderrate ~= oldsend then
+                            setfflag('S2PhysicsSenderRate', physicsrate)
+                            setfflag('DataSenderRate', senderrate)
+                            oldphys, oldsend = physicsrate, senderrate
+                        end
+                    end
+                    task.wait(0.03)
+                until (not Desync.Enabled and not teleported)
+            else
+                setfflag('S2PhysicsSenderRate', '15')
+                setfflag('DataSenderRate', '60')
+                oldphys, oldsend = nil, nil
+            end
+        end,
+        Tooltip = 'Desyncs ur character.\n (does not affect your pov)'
+    })
+    Type = Desync:CreateDropdown({
+        Name = 'Type',
+        List = {'Movement Only', 'All'},
+        Tooltip = 'Movement Only - Only chokes movement packets\nAll - Chokes remotes & movement'
+    })
+    AutoSendLength = Desync:CreateSlider({
+        Name = 'Send delay',
+        Min = 0,
+        Max = 1,
+        Decimal = 100,
+        Suffix = function(val)
+            return val == 1 and 'second' or 'seconds'
+        end
+    })
+    NoFly = Desync:CreateToggle({
+        Name = 'Disable when flying',
+        Default = true
+    })
+end)
